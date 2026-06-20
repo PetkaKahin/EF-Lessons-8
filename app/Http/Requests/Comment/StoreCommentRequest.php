@@ -1,0 +1,32 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Http\Requests\Comment;
+
+use App\Models\Comment;
+use Illuminate\Contracts\Validation\ValidationRule;
+use Illuminate\Foundation\Http\FormRequest;
+
+class StoreCommentRequest extends FormRequest
+{
+    public function authorize(): bool
+    {
+        return $this->user()->can('create', Comment::class);
+    }
+
+    /**
+     * @return array<string, ValidationRule|array<mixed>|string>
+     */
+    public function rules(): array
+    {
+        return [
+            'body' => [
+                'required',
+                'string',
+                'max:65000',
+                'min:1',
+            ],
+        ];
+    }
+}
