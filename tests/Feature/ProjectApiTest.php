@@ -45,6 +45,35 @@ describe('Проекты', function () {
             ->assertJsonMissing(['name' => 'Чужой проект']);
     });
 
+    it('Показывает проекты, где пользователь участник', function () {
+        $user = User::factory()->create();
+        $owner = User::factory()->create();
+        Sanctum::actingAs($user);
+
+        $project = createProjectFor($owner, 'Проект команды');
+        $project->members()->attach($user->id);
+
+        $projects = $this->getJson('/api/projects');
+
+        $projects
+            ->assertOk()
+            ->assertJsonFragment(['name' => 'Проект команды']);
+    });
+
+    it('Не показывает проекты, где пользователь не owner и не member', function () {
+        $user = User::factory()->create();
+        $owner = User::factory()->create();
+        Sanctum::actingAs($user);
+
+        createProjectFor($owner, 'Закрытый проект');
+
+        $projects = $this->getJson('/api/projects');
+
+        $projects
+            ->assertOk()
+            ->assertJsonMissing(['name' => 'Закрытый проект']);
+    });
+
     it('Показывает свой проект', function () {
         $user = User::factory()->create();
         Sanctum::actingAs($user);
@@ -59,18 +88,6 @@ describe('Проекты', function () {
             ->assertJsonPath('data.name', 'Личный проект');
     });
 
-    it('Не показывает чужой проект', function () {
-        $user = User::factory()->create();
-        $otherUser = User::factory()->create();
-        Sanctum::actingAs($user);
-
-        $project = createProjectFor($otherUser, 'Закрытый проект');
-
-        $response = $this->getJson('/api/projects/' . $project->id);
-
-        $response->assertForbidden();
-    });
-
     it('Создает проект', function () {
         $user = User::factory()->create();
         Sanctum::actingAs($user);
@@ -83,6 +100,8 @@ describe('Проекты', function () {
             ->assertCreated()
             ->assertJsonPath('data.name', 'Новый проект')
             ->assertJsonPath('data.owner_id', $user->id);
+
+        expect($response->json('data.created_at'))->not->toBeNull();
 
         $this->assertDatabaseHas('projects', [
             'name' => 'Новый проект',
@@ -148,8 +167,24 @@ describe('Проекты', function () {
             'id' => $project->id,
         ]);
     });
+
+    it('Не удаляет чужой проект', function () {
+        $user = User::factory()->create();
+        $owner = User::factory()->create();
+        Sanctum::actingAs($user);
+
+        $project = createProjectFor($owner, 'Новый проект');
+        $this->deleteJson('/api/projects/' . $project->id)
+            ->assertForbidden();
+    });
+
+    it('Не обновляет чужой проект', function () {
+        $user = User::factory()->create();
+        $owner = User::factory()->create();
+        Sanctum::actingAs($user);
+
+        $project = createProjectFor($owner, 'Новый проект');
+        $this->patchJson('/api/projects/' . $project->id)
+            ->assertForbidden();
+    });
 });
-
-
-
-

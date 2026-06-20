@@ -9,6 +9,7 @@ use App\Http\Requests\Project\StoreProjectRequest;
 use App\Http\Requests\Project\UpdateProjectRequest;
 use App\Http\Resources\ProjectResource;
 use App\Models\Project;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Response;
@@ -19,7 +20,10 @@ class ProjectController extends Controller
     {
         $this->authorize('viewAny', Project::class);
 
-        $projects = $request->user()->ownedProjects()->paginate(10);
+        $projects = Project::query()
+            ->where('owner_id', $request->user()->id)
+            ->orWhereHas('members', fn (Builder $query): Builder => $query->whereKey($request->user()->id))
+            ->paginate(10);
 
         return ProjectResource::collection($projects);
     }

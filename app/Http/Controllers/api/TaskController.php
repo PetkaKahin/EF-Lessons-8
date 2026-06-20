@@ -18,6 +18,8 @@ class TaskController extends Controller
 {
     public function index(IndexTaskRequest $request, Project $project): AnonymousResourceCollection
     {
+        $this->authorize('viewAny', [Task::class, $project]);
+
         $tasks = $project->tasks()
             ->when($request->filled('status'), fn ($query) => $query->where('status', $request->status))
             ->when($request->filled('priority'), fn ($query) => $query->where('priority', $request->priority))
@@ -31,7 +33,7 @@ class TaskController extends Controller
 
     public function show(Project $project, Task $task): TaskResource
     {
-        $this->authorize('view', $task);
+        $this->authorize('view', [Task::class, $project]);
 
         return TaskResource::make($task);
     }
@@ -52,7 +54,7 @@ class TaskController extends Controller
 
     public function destroy(Project $project, Task $task): Response
     {
-        $this->authorize('delete', $task);
+        $this->authorize('delete', [Task::class, $project]);
 
         $task->delete();
 

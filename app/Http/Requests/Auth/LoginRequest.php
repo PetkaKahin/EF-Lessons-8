@@ -1,18 +1,15 @@
 <?php
 
-declare(strict_types=1);
+namespace App\Http\Requests\Auth;
 
-namespace App\Http\Requests\Comment;
-
-use App\Models\Comment;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
-class StoreCommentRequest extends FormRequest
+class LoginRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()->can('create', [Comment::class, $this->route('project')]);
+        return true;
     }
 
     /**
@@ -21,11 +18,16 @@ class StoreCommentRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'body' => [
+            'email' => [
                 'required',
-                'string',
-                'max:65000',
+                'email',
                 'min:1',
+                'max:255',
+            ],
+            'password' => [
+                'required',
+                'min:1',
+                'max:255',
             ],
         ];
     }

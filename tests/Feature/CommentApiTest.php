@@ -29,6 +29,17 @@ describe('Комментарии', function () {
             ->assertJsonPath('meta.total', 11);
     });
 
+    it('Не принимает текст вместо id задачи в маршруте', function () {
+        $user = User::factory()->create();
+        Sanctum::actingAs($user);
+
+        $project = createProjectFor($user);
+
+        $response = $this->getJson('/api/projects/' . $project->id . '/tasks/comments');
+
+        $response->assertNotFound();
+    });
+
     it('Создает комментарий от текущего пользователя', function () {
         $user = User::factory()->create();
         Sanctum::actingAs($user);
@@ -44,6 +55,8 @@ describe('Комментарии', function () {
             ->assertCreated()
             ->assertJsonPath('data.body', 'Новый комментарий')
             ->assertJsonPath('data.user_id', $user->id);
+
+        expect($response->json('data.created_at'))->not->toBeNull();
 
         $this->assertDatabaseHas('comments', [
             'body' => 'Новый комментарий',
@@ -104,5 +117,35 @@ describe('Комментарии', function () {
             'id' => $comment->id,
             'body' => 'Новый текст',
         ]);
+    });
+
+    it('не удаляет чужой комментарий', function () {
+        $user = User::factory()->create();
+        $owner = User::factory()->create();
+        Sanctum::actingAs($user);
+
+        $project = createProjectFor($owner);
+        $task = createTaskFor($project);
+        $comment = createCommentFor($task, $owner, [
+            'body' => 'текст',
+        ]);
+
+        $this->deleteJson('/api/projects/' . $project->id . '/tasks/' . $task->id . '/comments/' . $comment->id)
+            ->assertForbidden();
+    });
+
+    it('не обновляет чужой комментарий', function () {
+        $user = User::factory()->create();
+        $owner = User::factory()->create();
+        Sanctum::actingAs($user);
+
+        $project = createProjectFor($owner);
+        $task = createTaskFor($project);
+        $comment = createCommentFor($task, $owner, [
+            'body' => 'текст',
+        ]);
+
+        $this->patchJson('/api/projects/' . $project->id . '/tasks/' . $task->id . '/comments/' . $comment->id)
+            ->assertForbidden();
     });
 });

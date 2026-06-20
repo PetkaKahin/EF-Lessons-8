@@ -135,4 +135,34 @@ describe('Задачи', function () {
             'title' => 'Новое название',
         ]);
     });
+
+    it('Не удаляет чужую задачу', function () {
+        $user = User::factory()->create();
+        $owner = User::factory()->create();
+        Sanctum::actingAs($user);
+
+        $project = createProjectFor($owner);
+        $task = createTaskFor($project, [
+            'title' => 'Созданная задача',
+        ]);
+
+        $this->deleteJson('/api/projects/' . $project->id . '/tasks/' . $task->id, [
+            'title' => 'Новое название',
+        ])->assertForbidden();
+    });
+
+    it('Не обновляет чужую задачу', function () {
+        $user = User::factory()->create();
+        $owner = User::factory()->create();
+        Sanctum::actingAs($user);
+
+        $project = createProjectFor($owner);
+        $task = createTaskFor($project, [
+            'title' => 'Созданная задача',
+        ]);
+
+        $this->patchJson('/api/projects/' . $project->id . '/tasks/' . $task->id, [
+            'title' => 'Новое название',
+        ])->assertForbidden();
+    });
 });

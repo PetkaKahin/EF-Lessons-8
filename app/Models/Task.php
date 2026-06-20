@@ -29,7 +29,7 @@ class Task extends Model
         ];
     }
 
-    public function project(): belongsTo
+    public function project(): BelongsTo
     {
         return $this->belongsTo(Project::class);
     }

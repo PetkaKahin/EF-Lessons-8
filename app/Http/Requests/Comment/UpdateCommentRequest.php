@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Comment;
 
+use App\Models\Comment;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -9,7 +10,7 @@ class UpdateCommentRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()->can('update', $this->route('comment'));
+        return $this->user()->can('update', [Comment::class, $this->route('project'), $this->route('comment')]);
     }
 
     /**
@@ -19,6 +20,7 @@ class UpdateCommentRequest extends FormRequest
     {
         return [
             'body' => [
+                'required', // пока одно поле, чтобы пустой update не делать
                 'string',
                 'max:65000',
                 'min:1',

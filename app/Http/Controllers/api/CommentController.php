@@ -18,7 +18,7 @@ class CommentController extends Controller
 {
     public function index(Project $project, Task $task): AnonymousResourceCollection
     {
-        $this->authorize('viewAny', Comment::class);
+        $this->authorize('viewAny', [Comment::class, $project]);
 
         $comments = $task->comments()->paginate(10);
 
@@ -27,7 +27,7 @@ class CommentController extends Controller
 
     public function show(Project $project, Task $task, Comment $comment): CommentResource
     {
-        $this->authorize('view', $comment);
+        $this->authorize('view', [Comment::class, $project]);
 
         return CommentResource::make($comment);
     }
@@ -51,7 +51,7 @@ class CommentController extends Controller
 
     public function destroy(Project $project, Task $task, Comment $comment): Response
     {
-        $this->authorize('delete', $comment);
+        $this->authorize('delete', [Comment::class, $project, $comment]);
 
         $comment->delete();
 

@@ -12,7 +12,7 @@ class Project extends Model
 {
     use HasFactory;
 
-    public $timestamps = false;
+    public const UPDATED_AT = null;
 
     /**
      * @var list<string>
