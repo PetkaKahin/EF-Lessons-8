@@ -8,6 +8,10 @@ use App\Http\Controllers\api\ProjectController;
 use App\Http\Controllers\api\TaskController;
 use Illuminate\Support\Facades\Route;
 
+Route::pattern('project', '[0-9]+');
+Route::pattern('task', '[0-9]+');
+Route::pattern('comment', '[0-9]+');
+
 Route::post('login', LoginController::class);
 
 Route::middleware('auth:sanctum')->group(function () {
