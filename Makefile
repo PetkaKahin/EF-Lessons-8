@@ -21,7 +21,7 @@ COMMAND_ARGS := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
 endif
 
 ifeq ($(COMMAND_MODE),)
-.PHONY: init init-dev init-prod env-dev env-prod up up-dev up-prod uo down build build-dev build-prod restart ps logs app bash composer composer-prod artisan migrate seed seed-test-data test lint analyse optimize clear deploy
+.PHONY: init init-dev init-prod env-dev env-prod up up-dev up-prod uo down build build-dev build-prod restart ps logs app bash composer composer-prod artisan migrate seed seed-test-data test lint lint-fix analyse optimize clear deploy
 else
 .PHONY: $(COMMAND_MODE)
 endif
@@ -128,6 +128,9 @@ test:
 
 lint:
 	$(COMPOSE) exec $(APP_SERVICE) ./vendor/bin/pint --test
+
+lint-fix:
+	$(COMPOSE) exec $(APP_SERVICE) ./vendor/bin/pint
 
 analyse:
 	$(COMPOSE) exec $(APP_SERVICE) ./vendor/bin/phpstan analyse

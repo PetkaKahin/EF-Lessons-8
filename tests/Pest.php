@@ -17,9 +17,11 @@ use App\Models\Comment;
 use App\Models\Project;
 use App\Models\Task;
 use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
 
-pest()->extend(Tests\TestCase::class)
-    ->use(Illuminate\Foundation\Testing\RefreshDatabase::class)
+pest()->extend(TestCase::class)
+    ->use(RefreshDatabase::class)
     ->in('Feature');
 
 /*
@@ -61,7 +63,7 @@ function createProjectFor(User $user, string $name = 'Тестовый прое�
 }
 
 /**
- * @param array<string, mixed> $overrides
+ * @param  array<string, mixed>  $overrides
  * @return array<string, mixed>
  */
 function taskPayload(array $overrides = []): array
@@ -79,16 +81,15 @@ function taskPayload(array $overrides = []): array
 }
 
 /**
- * @param array<string, mixed> $overrides
+ * @param  array<string, mixed>  $overrides
  */
 function createTaskFor(Project $project, array $overrides = []): Task
 {
     return $project->tasks()->create(taskPayload($overrides));
 }
 
-
 /**
- * @param array<string, mixed> $overrides
+ * @param  array<string, mixed>  $overrides
  */
 function createCommentFor(Task $task, User $user, array $overrides = []): Comment
 {

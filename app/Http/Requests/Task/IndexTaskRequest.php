@@ -41,7 +41,7 @@ class IndexTaskRequest extends FormRequest
             'search' => [
                 'string',
                 'max:255',
-            ]
+            ],
         ];
     }
 }

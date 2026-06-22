@@ -80,7 +80,7 @@ describe('Проекты', function () {
 
         $project = createProjectFor($user, 'Личный проект');
 
-        $response = $this->getJson('/api/projects/' . $project->id);
+        $response = $this->getJson('/api/projects/'.$project->id);
 
         $response
             ->assertOk()
@@ -139,7 +139,7 @@ describe('Проекты', function () {
 
         $project = createProjectFor($user, 'Старое имя');
 
-        $response = $this->patchJson('/api/projects/' . $project->id, [
+        $response = $this->patchJson('/api/projects/'.$project->id, [
             'name' => 'Новое имя',
         ]);
 
@@ -159,7 +159,7 @@ describe('Проекты', function () {
 
         $project = createProjectFor($user, 'Проект под удаление');
 
-        $response = $this->deleteJson('/api/projects/' . $project->id);
+        $response = $this->deleteJson('/api/projects/'.$project->id);
 
         $response->assertNoContent();
 
@@ -174,7 +174,7 @@ describe('Проекты', function () {
         Sanctum::actingAs($user);
 
         $project = createProjectFor($owner, 'Новый проект');
-        $this->deleteJson('/api/projects/' . $project->id)
+        $this->deleteJson('/api/projects/'.$project->id)
             ->assertForbidden();
     });
 
@@ -184,7 +184,7 @@ describe('Проекты', function () {
         Sanctum::actingAs($user);
 
         $project = createProjectFor($owner, 'Новый проект');
-        $this->patchJson('/api/projects/' . $project->id)
+        $this->patchJson('/api/projects/'.$project->id)
             ->assertForbidden();
     });
 });

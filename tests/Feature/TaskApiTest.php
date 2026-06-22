@@ -17,11 +17,11 @@ describe('Задачи', function () {
 
         for ($i = 1; $i <= 11; $i++) {
             createTaskFor($project, [
-                'title' => 'Задача ' . $i,
+                'title' => 'Задача '.$i,
             ]);
         }
 
-        $response = $this->getJson('/api/projects/' . $project->id . '/tasks');
+        $response = $this->getJson('/api/projects/'.$project->id.'/tasks');
 
         $response
             ->assertOk()
@@ -43,7 +43,7 @@ describe('Задачи', function () {
             'status' => TaskStatus::Done->value,
         ]);
 
-        $response = $this->getJson('/api/projects/' . $project->id . '/tasks?status=' . TaskStatus::Done->value);
+        $response = $this->getJson('/api/projects/'.$project->id.'/tasks?status='.TaskStatus::Done->value);
 
         $response
             ->assertOk()
@@ -58,7 +58,7 @@ describe('Задачи', function () {
 
         $project = createProjectFor($user);
 
-        $response = $this->postJson('/api/projects/' . $project->id . '/tasks', taskPayload([
+        $response = $this->postJson('/api/projects/'.$project->id.'/tasks', taskPayload([
             'title' => 'Созданная задача',
         ]));
 
@@ -79,7 +79,7 @@ describe('Задачи', function () {
 
         $project = createProjectFor($user);
 
-        $response = $this->postJson('/api/projects/' . $project->id . '/tasks', []);
+        $response = $this->postJson('/api/projects/'.$project->id.'/tasks', []);
 
         $response
             ->assertUnprocessable()
@@ -98,7 +98,7 @@ describe('Задачи', function () {
 
         $project = createProjectFor($user);
 
-        $response = $this->postJson('/api/projects/' . $project->id . '/tasks', taskPayload([
+        $response = $this->postJson('/api/projects/'.$project->id.'/tasks', taskPayload([
             'status' => 'wrong_status',
             'priority' => 'wrong_priority',
             'due_date' => 'not-a-date',
@@ -122,7 +122,7 @@ describe('Задачи', function () {
             'title' => 'Старое название',
         ]);
 
-        $response = $this->patchJson('/api/projects/' . $project->id . '/tasks/' . $task->id, [
+        $response = $this->patchJson('/api/projects/'.$project->id.'/tasks/'.$task->id, [
             'title' => 'Новое название',
         ]);
 
@@ -146,7 +146,7 @@ describe('Задачи', function () {
             'title' => 'Созданная задача',
         ]);
 
-        $this->deleteJson('/api/projects/' . $project->id . '/tasks/' . $task->id, [
+        $this->deleteJson('/api/projects/'.$project->id.'/tasks/'.$task->id, [
             'title' => 'Новое название',
         ])->assertForbidden();
     });
@@ -161,7 +161,7 @@ describe('Задачи', function () {
             'title' => 'Созданная задача',
         ]);
 
-        $this->patchJson('/api/projects/' . $project->id . '/tasks/' . $task->id, [
+        $this->patchJson('/api/projects/'.$project->id.'/tasks/'.$task->id, [
             'title' => 'Новое название',
         ])->assertForbidden();
     });

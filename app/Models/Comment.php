@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -10,11 +12,11 @@ class Comment extends Model
 {
     use HasFactory;
 
-    public const UPDATED_AT = null;
+    public const null UPDATED_AT = null;
 
     protected $fillable = [
         'body',
-        'user_id'
+        'user_id',
     ];
 
     public function task(): BelongsTo

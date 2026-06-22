@@ -18,7 +18,7 @@ class ProjectFactory extends Factory
     public function definition(): array
     {
         return [
-            'name' => 'Проект №' . fake()->randomNumber(),
+            'name' => 'Проект №'.fake()->randomNumber(),
             'owner_id' => User::factory(),
         ];
     }

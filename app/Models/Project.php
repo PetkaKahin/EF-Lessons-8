@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -12,7 +14,7 @@ class Project extends Model
 {
     use HasFactory;
 
-    public const UPDATED_AT = null;
+    public const null UPDATED_AT = null;
 
     /**
      * @var list<string>
@@ -33,6 +35,9 @@ class Project extends Model
             ->withTimestamps();
     }
 
+    /**
+     * @return HasMany<Task, $this>
+     */
     public function tasks(): HasMany
     {
         return $this->hasMany(Task::class);

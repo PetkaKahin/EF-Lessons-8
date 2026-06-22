@@ -29,6 +29,26 @@ services:
     networks:
       - laravel
 
+  queue:
+    image: ef_lessons_8_app:${APP_BUILD_TARGET:-dev}
+    container_name: ef_lessons_8_queue
+    working_dir: /var/www/html
+    user: "${UID:-1000}:${GID:-1000}"
+    command: >
+      sh -c "while [ ! -f vendor/autoload.php ]; do sleep 2; done;
+      php artisan queue:work --sleep=3 --tries=3 --timeout=90"
+    restart: unless-stopped
+    volumes:
+      - ./:/var/www/html
+      - app_storage:/var/www/html/storage
+    depends_on:
+      app:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - laravel
+
   nginx:
     image: nginx:stable-alpine
     container_name: ef_lessons_8_nginx

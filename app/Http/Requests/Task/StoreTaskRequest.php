@@ -37,16 +37,16 @@ class StoreTaskRequest extends FormRequest
             ],
             'status' => [
                 'required',
-                Rule::enum(TaskStatus::class)
+                Rule::enum(TaskStatus::class),
             ],
             'priority' => [
                 'required',
-                Rule::enum(TaskPriority::class)
+                Rule::enum(TaskPriority::class),
             ],
             'due_date' => [
                 'required',
                 'date',
-            ]
+            ],
         ];
     }
 }

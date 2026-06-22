@@ -17,11 +17,11 @@ describe('Комментарии', function () {
 
         for ($i = 1; $i <= 11; $i++) {
             createCommentFor($task, $user, [
-                'body' => 'Комментарий ' . $i,
+                'body' => 'Комментарий '.$i,
             ]);
         }
 
-        $response = $this->getJson('/api/projects/' . $project->id . '/tasks/' . $task->id . '/comments');
+        $response = $this->getJson('/api/projects/'.$project->id.'/tasks/'.$task->id.'/comments');
 
         $response
             ->assertOk()
@@ -35,7 +35,7 @@ describe('Комментарии', function () {
 
         $project = createProjectFor($user);
 
-        $response = $this->getJson('/api/projects/' . $project->id . '/tasks/comments');
+        $response = $this->getJson('/api/projects/'.$project->id.'/tasks/comments');
 
         $response->assertNotFound();
     });
@@ -47,7 +47,7 @@ describe('Комментарии', function () {
         $project = createProjectFor($user);
         $task = createTaskFor($project);
 
-        $response = $this->postJson('/api/projects/' . $project->id . '/tasks/' . $task->id . '/comments', [
+        $response = $this->postJson('/api/projects/'.$project->id.'/tasks/'.$task->id.'/comments', [
             'body' => 'Новый комментарий',
         ]);
 
@@ -72,7 +72,7 @@ describe('Комментарии', function () {
         $project = createProjectFor($user);
         $task = createTaskFor($project);
 
-        $response = $this->postJson('/api/projects/' . $project->id . '/tasks/' . $task->id . '/comments', []);
+        $response = $this->postJson('/api/projects/'.$project->id.'/tasks/'.$task->id.'/comments', []);
 
         $response
             ->assertUnprocessable()
@@ -86,7 +86,7 @@ describe('Комментарии', function () {
         $project = createProjectFor($user);
         $task = createTaskFor($project);
 
-        $response = $this->postJson('/api/projects/' . $project->id . '/tasks/' . $task->id . '/comments', [
+        $response = $this->postJson('/api/projects/'.$project->id.'/tasks/'.$task->id.'/comments', [
             'body' => str_repeat('a', 65001),
         ]);
 
@@ -105,7 +105,7 @@ describe('Комментарии', function () {
             'body' => 'Старый текст',
         ]);
 
-        $response = $this->patchJson('/api/projects/' . $project->id . '/tasks/' . $task->id . '/comments/' . $comment->id, [
+        $response = $this->patchJson('/api/projects/'.$project->id.'/tasks/'.$task->id.'/comments/'.$comment->id, [
             'body' => 'Новый текст',
         ]);
 
@@ -130,7 +130,7 @@ describe('Комментарии', function () {
             'body' => 'текст',
         ]);
 
-        $this->deleteJson('/api/projects/' . $project->id . '/tasks/' . $task->id . '/comments/' . $comment->id)
+        $this->deleteJson('/api/projects/'.$project->id.'/tasks/'.$task->id.'/comments/'.$comment->id)
             ->assertForbidden();
     });
 
@@ -145,7 +145,7 @@ describe('Комментарии', function () {
             'body' => 'текст',
         ]);
 
-        $this->patchJson('/api/projects/' . $project->id . '/tasks/' . $task->id . '/comments/' . $comment->id)
+        $this->patchJson('/api/projects/'.$project->id.'/tasks/'.$task->id.'/comments/'.$comment->id)
             ->assertForbidden();
     });
 });

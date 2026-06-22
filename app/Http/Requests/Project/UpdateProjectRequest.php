@@ -22,7 +22,7 @@ class UpdateProjectRequest extends FormRequest
                 'required', // пока одно поле, чтобы пустой update не делать
                 'string',
                 'max:255',
-                'min:1'
+                'min:1',
             ],
         ];
     }

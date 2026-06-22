@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\api;
 
+use App\Actions\Task\UpdateTask;
+use App\Events\Task\TaskCreated;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Task\IndexTaskRequest;
 use App\Http\Requests\Task\StoreTaskRequest;
@@ -16,6 +18,10 @@ use Illuminate\Http\Response;
 
 class TaskController extends Controller
 {
+    public function __construct(
+        private readonly UpdateTask $updateTask,
+    ) {}
+
     public function index(IndexTaskRequest $request, Project $project): AnonymousResourceCollection
     {
         $this->authorize('viewAny', [Task::class, $project]);
@@ -25,7 +31,7 @@ class TaskController extends Controller
             ->when($request->filled('priority'), fn ($query) => $query->where('priority', $request->priority))
             ->when($request->filled('due_date_from'), fn ($query) => $query->where('due_date', '>', $request->due_date_from))
             ->when($request->filled('due_date_to'), fn ($query) => $query->where('due_date', '<', $request->due_date_to))
-            ->when($request->filled('search'), fn ($query) => $query->where('title', 'like', '%' . $request->search . '%'))
+            ->when($request->filled('search'), fn ($query) => $query->where('title', 'like', '%'.$request->search.'%'))
             ->paginate(10);
 
         return TaskResource::collection($tasks);
@@ -42,12 +48,14 @@ class TaskController extends Controller
     {
         $task = $project->tasks()->create($request->validated());
 
+        TaskCreated::dispatch($task);
+
         return TaskResource::make($task);
     }
 
     public function update(UpdateTaskRequest $request, Project $project, Task $task): TaskResource
     {
-        $task->update($request->validated());
+        $task = $this->updateTask->handle($task, $request->validated());
 
         return TaskResource::make($task);
     }

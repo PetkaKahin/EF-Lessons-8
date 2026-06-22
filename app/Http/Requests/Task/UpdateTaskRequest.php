@@ -32,14 +32,14 @@ class UpdateTaskRequest extends FormRequest
                 'max:65000',
             ],
             'status' => [
-                Rule::enum(TaskStatus::class)
+                Rule::enum(TaskStatus::class),
             ],
             'priority' => [
-                Rule::enum(TaskPriority::class)
+                Rule::enum(TaskPriority::class),
             ],
             'due_date' => [
                 'date',
-            ]
+            ],
         ];
     }
 }
