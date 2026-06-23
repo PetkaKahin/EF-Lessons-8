@@ -9,6 +9,7 @@ use Illuminate\Log\LogManager;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Queue;
 use Laravel\Sanctum\Sanctum;
+
 use function Pest\Laravel\patchJson;
 
 $notificationPatch = 'var/notifications.log';
@@ -18,11 +19,11 @@ describe('Проверка jobs', function () use ($notificationPatch) {
         Queue::fake();
 
         $user = User::factory()->create();
-        sanctum::actingAs($user);
+        Sanctum::actingAs($user);
         $project = createProjectFor($user);
         $task = createTaskFor($project);
 
-        $response = patchJson('api/projects/' . $project->id . '/tasks/' . $task->id, [
+        $response = patchJson('api/projects/'.$project->id.'/tasks/'.$task->id, [
             'status' => TaskStatus::Done,
         ]);
 

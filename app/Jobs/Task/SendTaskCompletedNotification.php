@@ -15,16 +15,15 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 
-final class SendTaskCompletedNotification implements ShouldQueue, ShouldBeUnique
+final class SendTaskCompletedNotification implements ShouldBeUnique, ShouldQueue
 {
-    use Queueable, SerializesModels, Dispatchable;
+    use Dispatchable, Queueable, SerializesModels;
 
-    public int $tries   = 3;
+    public int $tries = 3;
+
     public int $timeout = 30;
 
-    public function __construct(private readonly Task $task)
-    {
-    }
+    public function __construct(private readonly Task $task) {}
 
     public function backoff(): array
     {
@@ -54,7 +53,7 @@ final class SendTaskCompletedNotification implements ShouldQueue, ShouldBeUnique
 
     public function uniqueId(): string
     {
-        return 'task_completed:' . $this->task->id;
+        return 'task_completed:'.$this->task->id;
     }
 
     public function failed(Throwable $error): void

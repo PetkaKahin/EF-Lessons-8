@@ -15,7 +15,8 @@ use Throwable;
 final class UpdateTask
 {
     /**
-     * @param array<string, mixed> $data
+     * @param  array<string, mixed>  $data
+     *
      * @throws Throwable
      */
     public function handle(Task $task, array $data): Task
