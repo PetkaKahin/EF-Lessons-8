@@ -15,6 +15,7 @@ use App\Models\Project;
 use App\Models\Task;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Response;
+use Throwable;
 
 class TaskController extends Controller
 {
@@ -53,6 +54,9 @@ class TaskController extends Controller
         return TaskResource::make($task);
     }
 
+    /**
+     * @throws Throwable
+     */
     public function update(UpdateTaskRequest $request, Project $project, Task $task): TaskResource
     {
         $task = $this->updateTask->handle($task, $request->validated());

@@ -7,9 +7,8 @@ namespace App\Listeners;
 use App\Enums\AuditLogActions;
 use App\Events\Task\TaskCreated;
 use App\Models\AuditLog;
-use Illuminate\Contracts\Queue\ShouldQueue;
 
-final class RecordTaskCreatedAuditLog implements ShouldQueue
+final class RecordTaskCreatedAuditLog
 {
     public function handle(TaskCreated $event): void
     {

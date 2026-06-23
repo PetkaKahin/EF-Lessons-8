@@ -19,8 +19,8 @@ env:
   DB_CONNECTION: pgsql
   DB_HOST: 127.0.0.1
   DB_PORT: 5432
-  DB_DATABASE: &db_database ef_lessons_7_test
-  DB_USERNAME: &db_username ef_lessons_7
+  DB_DATABASE: &db_database ef_lessons_8_test
+  DB_USERNAME: &db_username ef_lessons_8
   DB_PASSWORD: &db_password local_db_password
   DB_SSLMODE: disable
   MAIL_MAILER: array
@@ -97,14 +97,14 @@ jobs:
       - *checkout
 
       - name: Build Docker image
-        run: docker build --target prod -t ef-lessons-7:${{ github.sha }} -f docker/php/Dockerfile .
+        run: docker build --target prod -t ef-lessons-8:${{ github.sha }} -f docker/php/Dockerfile .
 
       - name: Save Docker image
-        run: docker save ef-lessons-7:${{ github.sha }} -o ef-lessons-7-image.tar
+        run: docker save ef-lessons-8:${{ github.sha }} -o ef-lessons-8-image.tar
 
       - name: Upload Docker image artifact
         uses: actions/upload-artifact@v7
         with:
-          name: ef-lessons-7-image
-          path: ef-lessons-7-image.tar
-          retention-days: 7
+          name: ef-lessons-8-image
+          path: ef-lessons-8-image.tar
+          retention-days: 8

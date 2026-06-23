@@ -7,9 +7,8 @@ namespace App\Listeners;
 use App\Enums\AuditLogActions;
 use App\Events\Task\TaskStatusChanged;
 use App\Models\AuditLog;
-use Illuminate\Contracts\Queue\ShouldQueue;
 
-class RecordTaskStatusChangedAuditLog implements ShouldQueue
+final class RecordTaskStatusChangedAuditLog
 {
     public function handle(TaskStatusChanged $event): void
     {
