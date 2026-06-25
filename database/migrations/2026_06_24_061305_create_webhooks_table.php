@@ -16,6 +16,8 @@ return new class extends Migration
             $table->string('secret');
             $table->boolean('enabled')->default(false);
             $table->timestamps();
+
+            $table->unique(['webhookable_type', 'webhookable_id']);
         });
     }
 

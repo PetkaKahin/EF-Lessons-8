@@ -25,8 +25,7 @@ describe('Задачи', function () {
 
         $response
             ->assertOk()
-            ->assertJsonCount(10, 'data')
-            ->assertJsonPath('meta.total', 11);
+            ->assertJsonCount(10, 'data');
     });
 
     it('Фильтрует задачи по статусу', function () {

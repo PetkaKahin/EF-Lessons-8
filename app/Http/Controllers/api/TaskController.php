@@ -33,7 +33,8 @@ class TaskController extends Controller
             ->when($request->filled('due_date_from'), fn ($query) => $query->where('due_date', '>=', $request->due_date_from))
             ->when($request->filled('due_date_to'), fn ($query) => $query->where('due_date', '<=', $request->due_date_to))
             ->when($request->filled('search'), fn ($query) => $query->where('title', 'like', '%'.$request->search.'%'))
-            ->paginate(10);
+            ->orderBy('id')
+            ->cursorPaginate(10);
 
         return TaskResource::collection($tasks);
     }

@@ -13,7 +13,7 @@ class WebhookPolicy
         if ($user->id === $project->owner_id) {
             return true;
         }
-        if ($project->members->contains($user)) {
+        if ($project->members()->whereKey($user->id)->exists()) {
             return true;
         }
 
@@ -32,7 +32,7 @@ class WebhookPolicy
         }
 
         // может быть только 1
-        if ($project->webhook) {
+        if ($project->webhook()->exists()) {
             return false;
         }
 

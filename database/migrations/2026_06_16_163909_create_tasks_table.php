@@ -17,6 +17,11 @@ return new class extends Migration
             $table->string('priority');
             $table->date('due_date');
             $table->timestamps();
+
+            $table->index(['project_id', 'id']);
+            $table->index(['project_id', 'status', 'id']);
+            $table->index(['project_id', 'priority', 'id']);
+            $table->index(['project_id', 'due_date', 'id']);
         });
     }
 
