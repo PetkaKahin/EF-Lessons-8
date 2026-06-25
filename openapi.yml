@@ -1,0 +1,1229 @@
+openapi: 3.1.0
+info:
+  title: API EF Lessons 8
+  version: 1.0.0
+  description: >
+    API для Laravel-приложения с проектами и задачами. Защищенные маршруты
+    используют bearer-токены Laravel Sanctum. В каждый HTTP-ответ добавляется
+    заголовок X-Request-Id
+
+servers:
+  - url: http://localhost:8080
+    description: Локальное Docker-окружение
+
+tags:
+  - name: Наблюдаемость
+  - name: Авторизация
+  - name: Проекты
+  - name: Задачи
+  - name: Комментарии
+  - name: Вебхуки
+
+paths:
+  /health:
+    get:
+      tags: [Наблюдаемость]
+      summary: Проверка состояния приложения
+      responses:
+        '200':
+          description: Приложение запущено
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status]
+                properties:
+                  status:
+                    type: string
+                    enum: [ok]
+
+  /ready:
+    get:
+      tags: [Наблюдаемость]
+      summary: Проверка готовности приложения
+      description: Проверяет доступность базы данных и Redis
+      responses:
+        '200':
+          description: База данных и Redis доступны
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status]
+                properties:
+                  status:
+                    type: string
+                    enum: [ok]
+        '503':
+          description: База данных или Redis недоступны
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                status: error
+
+  /metrics:
+    get:
+      tags: [Наблюдаемость]
+      summary: Простые метрики запросов
+      description: Возвращает HTML-страницу со счетчиками запросов и последними метриками
+      responses:
+        '200':
+          description: HTML-страница с метриками
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/RequestId'
+          content:
+            text/html:
+              schema:
+                type: string
+
+  /api/login:
+    post:
+      tags: [Авторизация]
+      summary: Получить API-токен
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                  format: email
+                  maxLength: 255
+                  example: user@example.com
+                password:
+                  type: string
+                  maxLength: 255
+                  example: secret-password
+      responses:
+        '200':
+          description: Токен создан
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [success, token]
+                properties:
+                  success:
+                    type: boolean
+                    enum: [true]
+                  token:
+                    type: string
+                    example: Bearer 1|plainTextToken
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /api/projects:
+    get:
+      tags: [Проекты]
+      summary: Список проектов
+      security:
+        - SanctumBearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/Page'
+      responses:
+        '200':
+          description: Проекты текущего пользователя
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Project'
+                  links:
+                    type: object
+                  meta:
+                    type: object
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+    post:
+      tags: [Проекты]
+      summary: Создать проект
+      security:
+        - SanctumBearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name:
+                  type: string
+                  minLength: 1
+                  maxLength: 255
+                  example: Новый проект
+      responses:
+        '201':
+          description: Проект создан
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectResource'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /api/projects/{project}:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+    get:
+      tags: [Проекты]
+      summary: Получить проект
+      security:
+        - SanctumBearerAuth: []
+      responses:
+        '200':
+          description: Данные проекта
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectResource'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags: [Проекты]
+      summary: Обновить проект
+      security:
+        - SanctumBearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name:
+                  type: string
+                  minLength: 1
+                  maxLength: 255
+      responses:
+        '200':
+          description: Проект обновлен
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectResource'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+    patch:
+      tags: [Проекты]
+      summary: Обновить проект
+      security:
+        - SanctumBearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name:
+                  type: string
+                  minLength: 1
+                  maxLength: 255
+      responses:
+        '200':
+          description: Проект обновлен
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectResource'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+    delete:
+      tags: [Проекты]
+      summary: Удалить проект
+      security:
+        - SanctumBearerAuth: []
+      responses:
+        '204':
+          description: Проект удален
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/RequestId'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/projects/{project}/tasks:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+    get:
+      tags: [Задачи]
+      summary: Список задач проекта
+      security:
+        - SanctumBearerAuth: []
+      parameters:
+        - name: cursor
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: status
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/TaskStatus'
+        - name: priority
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/TaskPriority'
+        - name: due_date_from
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+        - name: due_date_to
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+        - name: search
+          in: query
+          required: false
+          schema:
+            type: string
+            maxLength: 255
+      responses:
+        '200':
+          description: Задачи проекта
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Task'
+                  links:
+                    type: object
+                  meta:
+                    type: object
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+    post:
+      tags: [Задачи]
+      summary: Создать задачу
+      security:
+        - SanctumBearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskWrite'
+      responses:
+        '201':
+          description: Задача создана
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskResource'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /api/projects/{project}/tasks/{task}:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - $ref: '#/components/parameters/TaskId'
+    get:
+      tags: [Задачи]
+      summary: Получить задачу
+      security:
+        - SanctumBearerAuth: []
+      responses:
+        '200':
+          description: Данные задачи
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskResource'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags: [Задачи]
+      summary: Обновить задачу
+      description: При смене статуса приложение отправит включенный вебхук проекта
+      security:
+        - SanctumBearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskUpdate'
+      responses:
+        '200':
+          description: Задача обновлена
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskResource'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+    patch:
+      tags: [Задачи]
+      summary: Обновить задачу
+      description: При смене статуса приложение отправит включенный вебхук проекта
+      security:
+        - SanctumBearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskUpdate'
+      responses:
+        '200':
+          description: Задача обновлена
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskResource'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+    delete:
+      tags: [Задачи]
+      summary: Удалить задачу
+      security:
+        - SanctumBearerAuth: []
+      responses:
+        '204':
+          description: Задача удалена
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/RequestId'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/projects/{project}/tasks/{task}/comments:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - $ref: '#/components/parameters/TaskId'
+    get:
+      tags: [Комментарии]
+      summary: Список комментариев задачи
+      security:
+        - SanctumBearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/Page'
+      responses:
+        '200':
+          description: Комментарии задачи
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Comment'
+                  links:
+                    type: object
+                  meta:
+                    type: object
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    post:
+      tags: [Комментарии]
+      summary: Создать комментарий
+      security:
+        - SanctumBearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [body]
+              properties:
+                body:
+                  type: string
+                  minLength: 1
+                  maxLength: 65000
+      responses:
+        '201':
+          description: Комментарий создан
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommentResource'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /api/projects/{project}/tasks/{task}/comments/{comment}:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - $ref: '#/components/parameters/TaskId'
+      - $ref: '#/components/parameters/CommentId'
+    get:
+      tags: [Комментарии]
+      summary: Получить комментарий
+      security:
+        - SanctumBearerAuth: []
+      responses:
+        '200':
+          description: Данные комментария
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommentResource'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags: [Комментарии]
+      summary: Обновить комментарий
+      security:
+        - SanctumBearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [body]
+              properties:
+                body:
+                  type: string
+                  minLength: 1
+                  maxLength: 65000
+      responses:
+        '200':
+          description: Комментарий обновлен
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommentResource'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+    patch:
+      tags: [Комментарии]
+      summary: Обновить комментарий
+      security:
+        - SanctumBearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [body]
+              properties:
+                body:
+                  type: string
+                  minLength: 1
+                  maxLength: 65000
+      responses:
+        '200':
+          description: Комментарий обновлен
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommentResource'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+    delete:
+      tags: [Комментарии]
+      summary: Удалить комментарий
+      security:
+        - SanctumBearerAuth: []
+      responses:
+        '204':
+          description: Комментарий удален
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/RequestId'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/projects/{project}/webhooks:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+    get:
+      tags: [Вебхуки]
+      summary: Список вебхуков проекта
+      security:
+        - SanctumBearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/Page'
+      responses:
+        '200':
+          description: Вебхуки проекта
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Webhook'
+                  links:
+                    type: object
+                  meta:
+                    type: object
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    post:
+      tags: [Вебхуки]
+      summary: Создать вебхук
+      description: У проекта может быть только один вебхук
+      security:
+        - SanctumBearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookWrite'
+      responses:
+        '201':
+          description: Вебхук создан
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookResource'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /api/projects/{project}/webhooks/{webhook}:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - $ref: '#/components/parameters/WebhookId'
+    get:
+      tags: [Вебхуки]
+      summary: Получить вебхук
+      security:
+        - SanctumBearerAuth: []
+      responses:
+        '200':
+          description: Данные вебхука
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookResource'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags: [Вебхуки]
+      summary: Обновить вебхук
+      security:
+        - SanctumBearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookUpdate'
+      responses:
+        '200':
+          description: Вебхук обновлен
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookResource'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+    patch:
+      tags: [Вебхуки]
+      summary: Обновить вебхук
+      security:
+        - SanctumBearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookUpdate'
+      responses:
+        '200':
+          description: Вебхук обновлен
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookResource'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+    delete:
+      tags: [Вебхуки]
+      summary: Удалить вебхук
+      security:
+        - SanctumBearerAuth: []
+      responses:
+        '204':
+          description: Вебхук удален
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/RequestId'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/webhook/simulate:
+    post:
+      tags: [Вебхуки]
+      summary: Демо-приемник вебхуков
+      security: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          description: Приемник принял тело вебхука
+          headers:
+            X-Request-Id:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ok]
+                properties:
+                  ok:
+                    type: boolean
+                    enum: [true]
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+webhooks:
+  taskStatusChanged:
+    post:
+      summary: Исходящий вебхук изменения статуса задачи
+      description: >
+        Отправляется на URL вебхука проекта, когда статус задачи изменился
+        и вебхук включен. Один и тот же Idempotency-Key используется для
+        повторных попыток одного события
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          description: Ключ одного события доставки вебхука
+          schema:
+            type: string
+          example: webhook:12 task:45 time:2026-06-25 10:00:00
+        - name: X-Webhook-Signature
+          in: header
+          required: true
+          description: HMAC SHA-256 подпись JSON-тела с префиксом sha256=
+          schema:
+            type: string
+          example: sha256=6dc42d479af1f8b95c27d583fbf0b58f0f8d3f6b33cb3f8a0fd0a924e1b87089
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Task'
+      responses:
+        '2XX':
+          description: Приемник принял доставку
+        '4XX':
+          description: Приемник отклонил доставку
+        '5XX':
+          description: Приемник вернул ошибку
+
+components:
+  securitySchemes:
+    SanctumBearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: Sanctum token
+
+  headers:
+    RequestId:
+      description: Идентификатор запроса
+      schema:
+        type: string
+        format: uuid
+
+  parameters:
+    Page:
+      name: page
+      in: query
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+    ProjectId:
+      name: project
+      in: path
+      required: true
+      schema:
+        type: integer
+        minimum: 1
+    TaskId:
+      name: task
+      in: path
+      required: true
+      schema:
+        type: integer
+        minimum: 1
+    CommentId:
+      name: comment
+      in: path
+      required: true
+      schema:
+        type: integer
+        minimum: 1
+    WebhookId:
+      name: webhook
+      in: path
+      required: true
+      schema:
+        type: integer
+        minimum: 1
+
+  responses:
+    Unauthenticated:
+      description: Bearer-токен не передан или неверный
+      headers:
+        X-Request-Id:
+          $ref: '#/components/headers/RequestId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            message: Unauthenticated.
+    Forbidden:
+      description: У пользователя нет прав на это действие
+      headers:
+        X-Request-Id:
+          $ref: '#/components/headers/RequestId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            message: This action is unauthorized.
+    NotFound:
+      description: Ресурс не найден
+      headers:
+        X-Request-Id:
+          $ref: '#/components/headers/RequestId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            message: Not Found
+    ValidationError:
+      description: Ошибка валидации
+      headers:
+        X-Request-Id:
+          $ref: '#/components/headers/RequestId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ValidationErrorResponse'
+    ServerError:
+      description: Ошибка сервера
+      headers:
+        X-Request-Id:
+          $ref: '#/components/headers/RequestId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+  schemas:
+    Project:
+      type: object
+      required: [id, name, owner_id, created_at]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        owner_id:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+
+    Task:
+      type: object
+      required: [id, project_id, title, description, priority, status, due_date, created_at, updated_at]
+      properties:
+        id:
+          type: integer
+        project_id:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+        priority:
+          $ref: '#/components/schemas/TaskPriority'
+        status:
+          $ref: '#/components/schemas/TaskStatus'
+        due_date:
+          type: string
+          format: date
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    Comment:
+      type: object
+      required: [id, user_id, task_id, body, created_at]
+      properties:
+        id:
+          type: integer
+        user_id:
+          type: integer
+        task_id:
+          type: integer
+        body:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    Webhook:
+      type: object
+      required: [id, url, enabled]
+      properties:
+        id:
+          type: integer
+        url:
+          type: string
+          format: uri
+        enabled:
+          type: boolean
+
+    TaskStatus:
+      type: string
+      enum: [new, in_progress, blocked, done, cancelled]
+
+    TaskPriority:
+      type: string
+      enum: [low, normal, high, critical]
+
+    TaskWrite:
+      type: object
+      required: [title, description, status, priority, due_date]
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 255
+        description:
+          type: string
+          maxLength: 65000
+        status:
+          $ref: '#/components/schemas/TaskStatus'
+        priority:
+          $ref: '#/components/schemas/TaskPriority'
+        due_date:
+          type: string
+          format: date
+
+    TaskUpdate:
+      type: object
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 255
+        description:
+          type: string
+          maxLength: 65000
+        status:
+          $ref: '#/components/schemas/TaskStatus'
+        priority:
+          $ref: '#/components/schemas/TaskPriority'
+        due_date:
+          type: string
+          format: date
+
+    WebhookWrite:
+      type: object
+      required: [url, enabled, secret]
+      properties:
+        url:
+          type: string
+          format: uri
+          maxLength: 255
+        enabled:
+          type: boolean
+        secret:
+          type: string
+          maxLength: 255
+          writeOnly: true
+
+    WebhookUpdate:
+      type: object
+      properties:
+        url:
+          type: string
+          format: uri
+          maxLength: 255
+        enabled:
+          type: boolean
+        secret:
+          type: string
+          maxLength: 255
+          writeOnly: true
+
+    ProjectResource:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/Project'
+
+    TaskResource:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/Task'
+
+    CommentResource:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/Comment'
+
+    WebhookResource:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/Webhook'
+
+    ErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        status:
+          type: string
+
+    ValidationErrorResponse:
+      type: object
+      required: [message, errors]
+      properties:
+        message:
+          type: string
+        errors:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string
