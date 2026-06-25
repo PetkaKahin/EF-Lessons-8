@@ -30,8 +30,8 @@ class TaskController extends Controller
         $tasks = $project->tasks()
             ->when($request->filled('status'), fn ($query) => $query->where('status', $request->status))
             ->when($request->filled('priority'), fn ($query) => $query->where('priority', $request->priority))
-            ->when($request->filled('due_date_from'), fn ($query) => $query->where('due_date', '>', $request->due_date_from))
-            ->when($request->filled('due_date_to'), fn ($query) => $query->where('due_date', '<', $request->due_date_to))
+            ->when($request->filled('due_date_from'), fn ($query) => $query->where('due_date', '>=', $request->due_date_from))
+            ->when($request->filled('due_date_to'), fn ($query) => $query->where('due_date', '<=', $request->due_date_to))
             ->when($request->filled('search'), fn ($query) => $query->where('title', 'like', '%'.$request->search.'%'))
             ->paginate(10);
 

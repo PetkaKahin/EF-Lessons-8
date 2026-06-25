@@ -7,8 +7,10 @@ namespace App\Actions\Task;
 use App\Enums\TaskStatus;
 use App\Events\Task\TaskCompleted;
 use App\Events\Task\TaskStatusChanged;
+use App\Jobs\Task\DeliverTaskWebhook;
 use App\Jobs\Task\SendTaskCompletedNotification;
 use App\Models\Task;
+use App\Models\Webhook;
 use Illuminate\Support\Facades\DB;
 use Throwable;
 
@@ -29,7 +31,10 @@ final class UpdateTask
             $newStatus = $task->status;
 
             if ($oldStatus !== $newStatus) {
+                $webhook = $task->project->webhook;
+
                 TaskStatusChanged::dispatch($task);
+                $this->dispatchDeliverTaskWebhook($task, $webhook);
 
                 if ($newStatus === TaskStatus::Done) {
                     TaskCompleted::dispatch($task);
@@ -39,5 +44,18 @@ final class UpdateTask
         });
 
         return $task;
+    }
+
+    private function dispatchDeliverTaskWebhook(Task $task, ?Webhook $webhook): void
+    {
+        if (! $webhook?->enabled) {
+            return;
+        }
+
+        DeliverTaskWebhook::dispatch(
+            $task,
+            $webhook,
+            "webhook:{$webhook->id} task:{$task->id} time:{$task->updated_at}",
+        )->afterCommit();
     }
 }

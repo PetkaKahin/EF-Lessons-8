@@ -17,6 +17,7 @@ use App\Models\Comment;
 use App\Models\Project;
 use App\Models\Task;
 use App\Models\User;
+use App\Models\Webhook;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -86,6 +87,19 @@ function taskPayload(array $overrides = []): array
 function createTaskFor(Project $project, array $overrides = []): Task
 {
     return $project->tasks()->create(taskPayload($overrides));
+}
+
+function createWebhookFor(User $user, Project $project): Webhook
+{
+    $webhook = $project->webhook()->make([
+        'url' => 'https://receiver.test/webhook',
+        'secret' => 'test-secret',
+        'enabled' => true,
+    ]);
+    $webhook->owner()->associate($user);
+    $webhook->save();
+
+    return $webhook;
 }
 
 /**

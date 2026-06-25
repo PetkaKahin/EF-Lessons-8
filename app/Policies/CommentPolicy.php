@@ -30,7 +30,7 @@ class CommentPolicy
 
     public function delete(User $user, Project $project, Comment $comment): bool
     {
-        return $this->accessOnlyProjectOwner($user, $project);
+        return $this->accessOnlyMemberAndOwner($user, $project, $comment);
     }
 
     public function accessOnlyProjectMembersAndOwner(User $user, Project $project): bool
@@ -44,12 +44,9 @@ class CommentPolicy
 
     public function accessOnlyMemberAndOwner(User $user, Project $project, Comment $comment): bool
     {
-        if ($this->accessOnlyProjectOwner($user, $project)) {
-            return true;
-        }
-
-        return $this->accessOnlyProjectMembersAndOwner($user, $project)
-            && $user->id === $comment->user_id;
+        return $this->accessOnlyProjectOwner($user, $project)
+            || ($project->members()->where('user_id', $user->id)->exists()
+                && $user->id === $comment->user_id);
     }
 
     public function accessOnlyProjectOwner(User $user, Project $project): bool

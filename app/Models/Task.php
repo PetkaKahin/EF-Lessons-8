@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 /**
  * @property TaskStatus $status
  * @property TaskPriority $priority
+ * @property Project $project
  */
 class Task extends Model
 {

@@ -53,7 +53,7 @@ final class SendTaskCompletedNotification implements ShouldBeUnique, ShouldQueue
 
     public function uniqueId(): string
     {
-        return 'task_completed:'.$this->task->id;
+        return "task_completed:{$this->task->id} time:{$this->task->updated_at}";
     }
 
     public function failed(Throwable $error): void

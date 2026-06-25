@@ -51,11 +51,17 @@ class User extends Authenticatable
         ];
     }
 
+    /**
+     * @return HasMany<Project, $this>
+     */
     public function ownedProjects(): HasMany
     {
         return $this->hasMany(Project::class, 'owner_id');
     }
 
+    /**
+     * @return BelongsToMany<Project, $this>
+     */
     public function memberedProjects(): BelongsToMany
     {
         return $this->belongsToMany(Project::class)
@@ -63,8 +69,19 @@ class User extends Authenticatable
             ->withTimestamps();
     }
 
+    /**
+     * @return HasMany<Comment, $this>
+     */
     public function comments(): HasMany
     {
         return $this->hasMany(Comment::class);
+    }
+
+    /**
+     * @return HasMany<Webhook, $this>
+     */
+    public function ownedWebhooks(): HasMany
+    {
+        return $this->hasMany(Webhook::class, 'owner_id');
     }
 }

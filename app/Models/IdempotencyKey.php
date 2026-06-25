@@ -16,5 +16,6 @@ class IdempotencyKey extends Model
 
     protected $fillable = [
         'key',
+        'created_at',
     ];
 }

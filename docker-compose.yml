@@ -29,6 +29,19 @@ services:
     networks:
       - laravel
 
+  webhook-receiver:
+    image: ef_lessons_8_app:${APP_BUILD_TARGET:-dev}
+    working_dir: /var/www/html
+    command: php artisan serve --host=0.0.0.0 --port=8081
+    volumes:
+      - ./:/var/www/html
+      - app_storage:/var/www/html/storage
+    depends_on:
+      app:
+        condition: service_healthy
+    networks:
+      - laravel
+
   queue:
     image: ef_lessons_8_app:${APP_BUILD_TARGET:-dev}
     container_name: ef_lessons_8_queue

@@ -9,6 +9,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Database\Eloquent\Relations\MorphOne;
 
 class Project extends Model
 {
@@ -23,11 +25,17 @@ class Project extends Model
         'name',
     ];
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function owner(): BelongsTo
     {
         return $this->belongsTo(User::class, 'owner_id');
     }
 
+    /**
+     * @return BelongsToMany<User, $this>
+     */
     public function members(): BelongsToMany
     {
         return $this->belongsToMany(User::class)
@@ -41,5 +49,21 @@ class Project extends Model
     public function tasks(): HasMany
     {
         return $this->hasMany(Task::class);
+    }
+
+    /**
+     * @return MorphOne<Webhook, $this>
+     */
+    public function webhook(): MorphOne
+    {
+        return $this->MorphOne(Webhook::class, 'webhookable');
+    }
+
+    /**
+     * @return MorphMany<Webhook, $this>
+     */
+    public function webhooks(): MorphMany
+    {
+        return $this->morphMany(Webhook::class, 'webhookable');
     }
 }
